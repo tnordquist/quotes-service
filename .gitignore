@@ -29,3 +29,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+derby.log
+quotes_db
+
+.floo
+.flooignore
