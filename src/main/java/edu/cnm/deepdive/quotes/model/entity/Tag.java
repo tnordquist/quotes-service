@@ -14,35 +14,39 @@ import org.springframework.lang.NonNull;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Entity
-public class Source {
+public class Tag {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
-  @Column(name = "source_id", nullable = false, updatable = false)
+  @Column(name = "tag_id", nullable = false, updatable = false)
   private Long id;
 
+  @NonNull
   @CreationTimestamp
   @Temporal(TemporalType.TIMESTAMP)
   @Column(nullable = false, updatable = false)
   private Date created;
 
+  @NonNull
   @UpdateTimestamp
   @Temporal(TemporalType.TIMESTAMP)
   @Column(nullable = false)
   private Date updated;
 
   @NonNull
-  @Column(length = 100, nullable = false, unique = true)
+  @Column(length = 100, nullable = false)
   private String name;
 
   public Long getId() {
     return id;
   }
 
+  @NonNull
   public Date getCreated() {
     return created;
   }
 
+  @NonNull
   public Date getUpdated() {
     return updated;
   }

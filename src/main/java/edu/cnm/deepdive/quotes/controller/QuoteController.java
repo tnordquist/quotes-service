@@ -1,7 +1,15 @@
 package edu.cnm.deepdive.quotes.controller;
 
 import edu.cnm.deepdive.quotes.model.entity.Quote;
+import edu.cnm.deepdive.quotes.model.entity.Tag;
 import edu.cnm.deepdive.quotes.service.QuoteRepository;
+import edu.cnm.deepdive.quotes.service.SourceRepository;
+import edu.cnm.deepdive.quotes.service.TagRepository;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,10 +25,16 @@ import org.springframework.web.bind.annotation.RestController;
 public class QuoteController {
 
   private final QuoteRepository quoteRepository;
+  private final SourceRepository sourceRepository;
+  private final TagRepository tagRepository;
 
   @Autowired
-  public QuoteController(QuoteRepository quoteRepository) {
+  public QuoteController(QuoteRepository quoteRepository,
+      SourceRepository sourceRepository,
+      TagRepository tagRepository) {
     this.quoteRepository = quoteRepository;
+    this.sourceRepository = sourceRepository;
+    this.tagRepository = tagRepository;
   }
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -32,6 +46,16 @@ public class QuoteController {
       consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseStatus(HttpStatus.CREATED)
   public Quote post(@RequestBody Quote quote) {
+    if (quote.getSource() != null && quote.getSource().getId() != null) {
+      quote.setSource(sourceRepository.findById(quote.getSource().getId()).orElseThrow(
+          NoSuchElementException::new));
+    }
+    List<Tag> resolvedTags = quote.getTags().stream()
+        .map((t) -> (t.getId() != null) ? tagRepository.findById(t.getId()).orElse(null) : t)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
+    quote.getTags().clear();
+    quote.getTags().addAll(resolvedTags);
     return quoteRepository.save(quote);
   }
 
