@@ -20,19 +20,16 @@ import org.springframework.lang.NonNull;
 @Entity
 public class Quote {
 
-  @NonNull
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   @Column(name = "quote_id", nullable = false, updatable = false)
   private Long id;
 
-  @NonNull
   @CreationTimestamp
   @Temporal(TemporalType.TIMESTAMP)
   @Column(nullable = false, updatable = false)
   private Date created;
 
-  @NonNull
   @UpdateTimestamp
   @Temporal(TemporalType.TIMESTAMP)
   @Column(nullable = false)
@@ -47,17 +44,14 @@ public class Quote {
   @JoinColumn(name = "source_id")
   private Source source;
 
-  @NonNull
   public Long getId() {
     return id;
   }
 
-  @NonNull
   public Date getCreated() {
     return created;
   }
 
-  @NonNull
   public Date getUpdated() {
     return updated;
   }
