@@ -1,5 +1,9 @@
 package edu.cnm.deepdive.quotes.model.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import edu.cnm.deepdive.quotes.view.FlatQuote;
+import edu.cnm.deepdive.quotes.view.FlatSource;
+import edu.cnm.deepdive.quotes.view.FlatTag;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,7 +27,7 @@ import org.springframework.lang.NonNull;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Entity
-public class Quote {
+public class Quote implements FlatQuote {
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
@@ -46,7 +50,8 @@ public class Quote {
 
   @ManyToOne(fetch = FetchType.EAGER,
       cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-  @JoinColumn(name = "source_id")
+  @JoinColumn(name = "source_id", nullable = false)
+  @JsonSerialize(as = FlatSource.class)
   private Source source;
 
   @ManyToMany(fetch = FetchType.EAGER,
@@ -54,20 +59,25 @@ public class Quote {
   @JoinTable(name = "quote_tag", joinColumns = @JoinColumn(name = "quote_id"),
       inverseJoinColumns = @JoinColumn(name = "tag_id"))
   @OrderBy("name ASC")
-  public List<Tag> tags = new LinkedList<>();
+  @JsonSerialize(contentAs = FlatTag.class)
+  private List<Tag> tags = new LinkedList<>();
 
+  @Override
   public Long getId() {
     return id;
   }
 
+  @Override
   public Date getCreated() {
     return created;
   }
 
+  @Override
   public Date getUpdated() {
     return updated;
   }
 
+  @Override
   @NonNull
   public String getText() {
     return text;
