@@ -50,7 +50,7 @@ public class Quote implements FlatQuote {
 
   @ManyToOne(fetch = FetchType.EAGER,
       cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
-  @JoinColumn(name = "source_id", nullable = false)
+  @JoinColumn(name = "source_id")
   @JsonSerialize(as = FlatSource.class)
   private Source source;
 
