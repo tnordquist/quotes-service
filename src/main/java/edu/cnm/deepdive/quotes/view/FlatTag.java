@@ -5,7 +5,7 @@ import java.net.URI;
 import java.util.Date;
 import org.springframework.lang.NonNull;
 
-@JsonPropertyOrder({"id", "created", "updated", "name"})
+@JsonPropertyOrder({"id", "created", "updated", "name", "href"})
 public interface FlatTag {
 
   Long getId();
