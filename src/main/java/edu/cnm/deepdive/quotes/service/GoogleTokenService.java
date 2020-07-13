@@ -6,15 +6,22 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import edu.cnm.deepdive.quotes.model.entity.User;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Collection;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.OAuth2Request;
 import org.springframework.security.oauth2.provider.token.AccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.DefaultAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
@@ -29,11 +36,12 @@ public class GoogleTokenService implements ResourceServerTokenServices {
 
   private final String clientId;
   private final AccessTokenConverter converter;
-  // TODO Reference UserService.
+  private final UserService userService;
 
   @Autowired
-  public GoogleTokenService(@Value("${oauth.clientId}") String clientId) {
+  public GoogleTokenService(@Value("${oauth.clientId}") String clientId, UserService userService) {
     this.clientId = clientId;
+    this.userService = userService;
     converter = new DefaultAccessTokenConverter();
   }
 
@@ -57,8 +65,12 @@ public class GoogleTokenService implements ResourceServerTokenServices {
       String oauthKey = payload.getSubject();
       String displayName = (String) payload.get("name");
       // TODO Extract any additional required info from payload.
-      // TODO Request user from UserService.
-      return null; // TODO Replace with actual value.
+      User user = userService.readOrCreateOne(oauthKey, displayName);
+      Collection<GrantedAuthority> grants = Collections.singleton(
+          new SimpleGrantedAuthority(String.format(ROLE_PATTERN, user.getRole())));
+      Authentication base = new UsernamePasswordAuthenticationToken(user, token, grants);
+      OAuth2Request request = converter.extractAuthentication(payload).getOAuth2Request();
+      return new OAuth2Authentication(request, base);
     } else {
       throw new InvalidTokenException(VERIFICATION_FAILURE);
     }

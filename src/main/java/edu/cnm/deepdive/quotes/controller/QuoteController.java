@@ -3,6 +3,7 @@ package edu.cnm.deepdive.quotes.controller;
 import edu.cnm.deepdive.quotes.model.entity.Quote;
 import edu.cnm.deepdive.quotes.model.entity.Source;
 import edu.cnm.deepdive.quotes.model.entity.Tag;
+import edu.cnm.deepdive.quotes.model.entity.User;
 import edu.cnm.deepdive.quotes.service.QuoteRepository;
 import edu.cnm.deepdive.quotes.service.SourceRepository;
 import edu.cnm.deepdive.quotes.service.TagRepository;
@@ -14,6 +15,7 @@ import org.springframework.hateoas.server.ExposesResourceFor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -49,7 +51,7 @@ public class QuoteController {
 
   @PostMapping(
       consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<Quote> post(@RequestBody Quote quote) {
+  public ResponseEntity<Quote> post(@RequestBody Quote quote, Authentication auth) {
     if (quote.getSource() != null && quote.getSource().getId() != null) {
       quote.setSource(
           sourceRepository.findById(
@@ -63,6 +65,7 @@ public class QuoteController {
         .collect(Collectors.toList());
     quote.getTags().clear();
     quote.getTags().addAll(resolvedTags);
+    quote.setContributor((User) auth.getPrincipal());
     quoteRepository.save(quote);
     return ResponseEntity.created(quote.getHref()).body(quote);
   }
