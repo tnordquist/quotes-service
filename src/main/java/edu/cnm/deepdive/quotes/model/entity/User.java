@@ -1,52 +1,44 @@
 package edu.cnm.deepdive.quotes.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import edu.cnm.deepdive.quotes.view.FlatQuote;
-import edu.cnm.deepdive.quotes.view.FlatSource;
+import edu.cnm.deepdive.quotes.view.FlatUser;
 import java.net.URI;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 import javax.annotation.PostConstruct;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderBy;
+import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.server.EntityLinks;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @SuppressWarnings("JpaDataSourceORMInspection")
 @Entity
+@Table(name = "user_profile")
 @Component
 @JsonIgnoreProperties(
-    value = {"created", "updated", "quotes", "href"},
+    value = {"id", "created", "updated", "href", "oauthKey"},
     allowGetters = true,
     ignoreUnknown = true
 )
-public class Source implements FlatSource {
+public class User implements FlatUser {
 
   private static EntityLinks entityLinks;
 
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
-  @Column(name = "source_id", nullable = false, updatable = false)
+  @Column(name = "user_id", nullable = false, updatable = false)
   private Long id;
-
-  @NonNull
-  @Column(length = 100, nullable = false, unique = true)
-  private String name;
 
   @CreationTimestamp
   @Temporal(TemporalType.TIMESTAMP)
@@ -58,28 +50,20 @@ public class Source implements FlatSource {
   @Column(nullable = false)
   private Date updated;
 
-  @OneToMany(
-      fetch = FetchType.LAZY,
-      mappedBy = "source",
-      cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH}
-  )
-  @OrderBy("text ASC")
-  @JsonSerialize(contentAs = FlatQuote.class)
-  private List<Quote> quotes = new LinkedList<>();
+  @Column(nullable = false, unique = true)
+  private String displayName;
+
+  @JsonIgnore
+  @Column(nullable = false, updatable = false, unique = true)
+  private String oauthKey;
+
+  @Enumerated(value = EnumType.ORDINAL)
+  @Column(nullable = false)
+  private Role role = Role.USER;
 
   @Override
   public Long getId() {
     return id;
-  }
-
-  @Override
-  @NonNull
-  public String getName() {
-    return name;
-  }
-
-  public void setName(@NonNull String name) {
-    this.name = name;
   }
 
   @Override
@@ -92,8 +76,30 @@ public class Source implements FlatSource {
     return updated;
   }
 
-  public List<Quote> getQuotes() {
-    return quotes;
+  @Override
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
+  }
+
+  public String getOauthKey() {
+    return oauthKey;
+  }
+
+  public void setOauthKey(String oauthKey) {
+    this.oauthKey = oauthKey;
+  }
+
+  @Override
+  public Role getRole() {
+    return role;
+  }
+
+  public void setRole(Role role) {
+    this.role = role;
   }
 
   @PostConstruct
@@ -105,12 +111,16 @@ public class Source implements FlatSource {
   @Autowired
   private void setEntityLinks(
       @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection") EntityLinks entityLinks) {
-    Source.entityLinks = entityLinks;
+    User.entityLinks = entityLinks;
   }
 
   @Override
   public URI getHref() {
-    return (id != null) ? entityLinks.linkForItemResource(Source.class, id).toUri() : null;
+    return (id != null) ? entityLinks.linkForItemResource(User.class, id).toUri() : null;
+  }
+
+  public enum Role {
+    USER, ADMINISTRATOR
   }
 
 }
